@@ -515,6 +515,106 @@
         .btn-delete:hover {
             background: #ff5252;
         }
+
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            z-index: 100;
+            animation: slideIn 0.3s ease;
+        }
+
+        .sync-status.synced {
+            color: #22863a;
+        }
+
+        .sync-status.syncing {
+            color: #6f42c1;
+        }
+
+        .sync-status.error {
+            color: #cb2431;
+        }
+
+        .sync-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .sync-status.synced .sync-indicator {
+            background: #22863a;
+        }
+
+        .sync-status.syncing .sync-indicator {
+            background: #6f42c1;
+            animation: pulse 1s infinite;
+        }
+
+        .sync-status.error .sync-indicator {
+            background: #cb2431;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 600px) {
+            .sync-status {
+                bottom: 15px;
+                right: 15px;
+                font-size: 0.8rem;
+                padding: 10px 14px;
+            }
+
+            .header-actions {
+                margin-top: 10px;
+            }
+
+            .btn-action {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+        }
+
+        .hidden-file {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -522,6 +622,11 @@
         <header>
             <h1>💍 Lista de Presentes</h1>
             <p>Casamento - Marque seu presente!</p>
+            <div class="header-actions">
+                <button class="btn-action" onclick="exportData()" title="Baixar lista em JSON">📥 Exportar</button>
+                <button class="btn-action" onclick="document.getElementById('fileInput').click()" title="Carregar lista de arquivo">📤 Importar</button>
+                <input type="file" id="fileInput" accept=".json" class="hidden-file" onchange="importData(event)">
+            </div>
         </header>
 
         <div class="add-item-section">
@@ -533,6 +638,12 @@
         </div>
 
         <div class="items-grid" id="itemsGrid"></div>
+    </div>
+
+    <!-- Status de Sincronização -->
+    <div class="sync-status syncing" id="syncStatus">
+        <span class="sync-indicator"></span>
+        <span id="syncText">Inicializando...</span>
     </div>
 
     <!-- Modal -->
@@ -581,46 +692,189 @@
     </div>
 
     <script>
-        // Lista de itens padrão
+        // Configurações
+        const DB_NAME = 'WeddingRegistry';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'items';
+        const DELETE_PASSWORD = '1997';
+        const SYNC_INTERVAL = 3000; // 3 segundos
+        
         const defaultItems = [
-            { name: 'Mixer', emoji: '🥄' },
-            { name: 'TV', emoji: '📺' },
-            { name: 'Forno elétrico', emoji: '🔥' },
-            { name: 'Sofá', emoji: '🛋️' },
-            { name: 'Guarda roupa', emoji: '🚪' },
-            { name: 'Airfrier', emoji: '🍟' },
-            { name: 'Toalha de rosto', emoji: '🧴' }
+            { id: 1, name: 'Mixer', emoji: '🥄', people: [] },
+            { id: 2, name: 'TV', emoji: '📺', people: [] },
+            { id: 3, name: 'Forno elétrico', emoji: '🔥', people: [] },
+            { id: 4, name: 'Sofá', emoji: '🛋️', people: [] },
+            { id: 5, name: 'Guarda roupa', emoji: '🚪', people: [] },
+            { id: 6, name: 'Airfrier', emoji: '🍟', people: [] },
+            { id: 7, name: 'Toalha de rosto', emoji: '🧴', people: [] }
         ];
 
         let items = [];
         let currentItemIndex = -1;
         let itemToDeleteIndex = -1;
-        const DELETE_PASSWORD = '1997';
+        let db = null;
+        let lastSyncHash = '';
+        let syncInterval = null;
+        let nextId = 8;
 
-        // Inicializar aplicação
-        function init() {
-            loadItems();
-            renderItems();
-            setupEventListeners();
+        // ========================
+        // IndexedDB Management
+        // ========================
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => {
+                    console.error('Erro ao abrir IndexedDB');
+                    reject(request.error);
+                };
+
+                request.onsuccess = () => {
+                    db = request.result;
+                    console.log('✓ IndexedDB aberto');
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
         }
 
-        // Carregar itens do localStorage
-        function loadItems() {
-            const saved = localStorage.getItem('weddingItems');
-            items = saved ? JSON.parse(saved) : defaultItems.map(item => ({
-                name: item.name,
-                emoji: item.emoji,
-                people: []
-            }));
-            saveItems();
+        function loadItemsFromDB() {
+            return new Promise((resolve) => {
+                if (!db) {
+                    resolve([]);
+                    return;
+                }
+
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    items = request.result.length > 0 ? request.result : defaultItems;
+                    if (items.length > 0) {
+                        nextId = Math.max(...items.map(i => i.id)) + 1;
+                    }
+                    lastSyncHash = generateHash(items);
+                    console.log('✓ Itens carregados do IndexedDB');
+                    resolve();
+                };
+
+                request.onerror = () => {
+                    console.warn('Erro ao carregar do IndexedDB, usando padrão');
+                    items = defaultItems;
+                    resolve();
+                };
+            });
         }
 
-        // Salvar itens no localStorage
-        function saveItems() {
-            localStorage.setItem('weddingItems', JSON.stringify(items));
+        function saveItemsToDB() {
+            return new Promise((resolve) => {
+                if (!db) {
+                    resolve();
+                    return;
+                }
+
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                
+                // Limpar dados antigos
+                store.clear();
+
+                // Salvar novos dados
+                items.forEach(item => {
+                    store.add(item);
+                });
+
+                transaction.oncomplete = () => {
+                    console.log('✓ Dados salvos no IndexedDB');
+                    resolve();
+                };
+
+                transaction.onerror = () => {
+                    console.error('Erro ao salvar no IndexedDB');
+                    resolve();
+                };
+            });
         }
 
-        // Renderizar grid de itens
+        // ========================
+        // Data Management
+        // ========================
+
+        function generateHash(data) {
+            return JSON.stringify(data).split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+            }, 0).toString();
+        }
+
+        function updateSyncStatus(status, message = '') {
+            const statusEl = document.getElementById('syncStatus');
+            const textEl = document.getElementById('syncText');
+            
+            statusEl.className = 'sync-status ' + status;
+            
+            if (status === 'synced') {
+                textEl.textContent = message || '✓ Sincronizado';
+            } else if (status === 'syncing') {
+                textEl.textContent = message || '⟳ Sincronizando...';
+            } else if (status === 'error') {
+                textEl.textContent = message || '⚠ Modo offline';
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify({ items, exportedAt: new Date().toISOString() }, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `lista-presentes-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            updateSyncStatus('synced', '✓ Exportado com sucesso');
+            setTimeout(() => updateSyncStatus('synced'), 2000);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.items && Array.isArray(data.items)) {
+                        items = data.items;
+                        if (items.length > 0) {
+                            nextId = Math.max(...items.map(i => i.id || 0)) + 1;
+                        }
+                        await saveItemsToDB();
+                        renderItems();
+                        updateSyncStatus('synced', '✓ Importado com sucesso');
+                        setTimeout(() => updateSyncStatus('synced'), 2000);
+                    }
+                } catch (error) {
+                    console.error('Erro ao importar:', error);
+                    updateSyncStatus('error', '❌ Erro ao importar arquivo');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // ========================
+        // UI Rendering
+        // ========================
+
         function renderItems() {
             const grid = document.getElementById('itemsGrid');
             grid.innerHTML = items.map((item, index) => `
@@ -635,7 +889,6 @@
             `).join('');
         }
 
-        // Abrir modal
         function openModal(index) {
             currentItemIndex = index;
             const item = items[index];
@@ -649,13 +902,11 @@
             modal.classList.add('active');
         }
 
-        // Fechar modal
         function closeModal() {
             document.getElementById('modal').classList.remove('active');
             currentItemIndex = -1;
         }
 
-        // Renderizar lista de nomes
         function renderNamesList() {
             const item = items[currentItemIndex];
             const namesList = document.getElementById('namesList');
@@ -673,8 +924,11 @@
             `).join('');
         }
 
-        // Adicionar pessoa
-        function addPerson() {
+        // ========================
+        // Item Operations
+        // ========================
+
+        async function addPerson() {
             const input = document.getElementById('personName');
             const name = input.value.trim();
             const messageContainer = document.getElementById('messageContainer');
@@ -692,7 +946,7 @@
             }
 
             item.people.push(name);
-            saveItems();
+            await saveItemsToDB();
             input.value = '';
             messageContainer.innerHTML = '<div class="success-message">✓ Seu nome foi adicionado com sucesso!</div>';
 
@@ -701,18 +955,17 @@
             }, 3000);
 
             renderNamesList();
+            renderItems();
         }
 
-        // Remover pessoa
-        function removePerson(index) {
+        async function removePerson(index) {
             const item = items[currentItemIndex];
             item.people.splice(index, 1);
-            saveItems();
+            await saveItemsToDB();
             renderNamesList();
             renderItems();
         }
 
-        // Abrir modal de confirmação de senha
         function openPasswordModal(index) {
             itemToDeleteIndex = index;
             const item = items[index];
@@ -722,14 +975,12 @@
             document.getElementById('passwordModal').classList.add('active');
         }
 
-        // Fechar modal de senha
         function closePasswordModal() {
             document.getElementById('passwordModal').classList.remove('active');
             itemToDeleteIndex = -1;
         }
 
-        // Confirmar exclusão com senha
-        function confirmDelete() {
+        async function confirmDelete() {
             const password = document.getElementById('passwordInput').value;
             const messageContainer = document.getElementById('passwordMessageContainer');
 
@@ -744,24 +995,25 @@
                 return;
             }
 
-            // Senha correta - deletar item
             items.splice(itemToDeleteIndex, 1);
-            saveItems();
+            await saveItemsToDB();
             renderItems();
             closePasswordModal();
             closeModal();
         }
 
-        // Adicionar novo item
+        // ========================
+        // Event Listeners
+        // ========================
+
         function setupEventListeners() {
-            document.getElementById('addItemForm').addEventListener('submit', (e) => {
+            document.getElementById('addItemForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const input = document.getElementById('newItemName');
                 const name = input.value.trim();
 
                 if (!name) return;
 
-                // Sugerir emoji baseado em palavras-chave
                 let emoji = '🎁';
                 const lowerName = name.toLowerCase();
                 const emojiMap = {
@@ -780,39 +1032,51 @@
                 }
 
                 items.push({
+                    id: nextId++,
                     name: name,
                     emoji: emoji,
                     people: []
                 });
 
-                saveItems();
+                await saveItemsToDB();
                 renderItems();
                 input.value = '';
+                updateSyncStatus('synced', '✓ Item adicionado');
             });
 
-            // Fechar modal ao clicar fora
             document.getElementById('modal').addEventListener('click', (e) => {
-                if (e.target.id === 'modal') {
-                    closeModal();
-                }
+                if (e.target.id === 'modal') closeModal();
             });
 
-            // Fechar modal de senha ao clicar fora
             document.getElementById('passwordModal').addEventListener('click', (e) => {
-                if (e.target.id === 'passwordModal') {
-                    closePasswordModal();
-                }
+                if (e.target.id === 'passwordModal') closePasswordModal();
             });
 
-            // Enter para confirmar deletar
             document.getElementById('passwordInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    confirmDelete();
-                }
+                if (e.key === 'Enter') confirmDelete();
             });
         }
 
-        // Iniciar app
+        // ========================
+        // Initialization
+        // ========================
+
+        async function init() {
+            try {
+                updateSyncStatus('syncing', '🔄 Carregando...');
+                await initDB();
+                await loadItemsFromDB();
+                renderItems();
+                setupEventListeners();
+                updateSyncStatus('synced', '✓ Pronto');
+                console.log('✓ Aplicação iniciada com sucesso');
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                updateSyncStatus('error', '❌ Erro ao carregar');
+            }
+        }
+
+        // Iniciar aplicação
         init();
     </script>
 </body>
