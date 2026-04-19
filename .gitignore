@@ -1,0 +1,36 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backups
+*.bak
+*.tmp
+*~
+
+# Logs
+logs/
+*.log
+
+# Environment variables (GitHub Actions uses GitHub Secrets instead)
+.env
+.env.local
+.env.*.local
+
+# Credentials (NEVER commit actual credentials)
+credentials.json
+secrets.json
+
+# Node modules (if using locally)
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+build/
+

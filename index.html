@@ -3,6 +3,425 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Compartilhada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button.secondary {
+            background: #6c757d;
+            flex: 1;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        button.danger {
+            background: #e74c3c;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        .items-list {
+            list-style: none;
+            border-top: 1px solid #eee;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+
+        .item:hover {
+            background: #f8f9fa;
+        }
+
+        .item.reserved {
+            opacity: 0.6;
+            background: #f0f0f0;
+        }
+
+        .item-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .item.reserved .item-name {
+            text-decoration: line-through;
+        }
+
+        .item-user {
+            font-size: 0.85rem;
+            color: #666;
+            margin-right: 15px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .sync-status {
+            text-align: center;
+            padding: 10px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .sync-status.loading {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        @media (max-width: 500px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .controls button {
+                width: 100%;
+            }
+
+            header h1 {
+                font-size: 1.4rem;
+            }
+
+            .item {
+                flex-wrap: wrap;
+            }
+
+            .item-user {
+                width: 100%;
+                margin: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Lista Compartilhada</h1>
+            <p>Todos podem adicionar e reservar itens</p>
+        </header>
+
+        <div class="content">
+            <div class="sync-status" id="syncStatus">Carregando...</div>
+
+            <div class="info-box">
+                <strong>💡 Como funciona:</strong> Digite seu nome, adicione itens e reserve os que quer. Clique em "Atualizar do Repositório" para sincronizar com outras pessoas.
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="userName" placeholder="Seu nome" maxlength="30">
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="itemInput" placeholder="Digite um item...">
+                <button onclick="addItem()">Adicionar</button>
+            </div>
+
+            <ul class="items-list" id="itemsList"></ul>
+
+            <div class="controls">
+                <button class="secondary" onclick="refreshFromRepo()">🔄 Atualizar do Repositório</button>
+                <button class="secondary" onclick="exportToCSV()">📥 Baixar CSV</button>
+                <button class="secondary" onclick="document.getElementById('fileInput').click()">📤 Enviar CSV</button>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;" onchange="importFromCSV()">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'lista-items';
+        const USER_STORAGE_KEY = 'lista-user';
+        const CSV_URL = 'items.csv';
+        let items = [];
+
+        // Inicialização
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+            if (savedUser) document.getElementById('userName').value = savedUser;
+
+            document.getElementById('userName').addEventListener('blur', saveUserName);
+            document.getElementById('itemInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addItem();
+            });
+
+            loadFromLocalStorage();
+            refreshFromRepo();
+        });
+
+        function saveUserName() {
+            localStorage.setItem(USER_STORAGE_KEY, document.getElementById('userName').value);
+        }
+
+        async function refreshFromRepo() {
+            updateStatus('Carregando do repositório...', true);
+            try {
+                const response = await fetch(CSV_URL + '?t=' + Date.now());
+                const csv = await response.text();
+                items = parseCSV(csv);
+                saveToLocalStorage();
+                renderItems();
+                updateStatus('✅ Sincronizado!', false);
+                setTimeout(() => updateStatus('', false), 3000);
+            } catch (error) {
+                updateStatus('⚠️ Erro ao carregar. Usando dados locais.', false);
+                loadFromLocalStorage();
+                renderItems();
+            }
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n').filter(l => l.trim());
+            return lines.slice(1).map(line => {
+                const [name, user, reserved] = line.split(',').map(s => s.trim().replace(/^"(.*)"$/, '$1'));
+                return { name, user: user || '', reserved: reserved === 'true' };
+            });
+        }
+
+        async function addItem() {
+            const input = document.getElementById('itemInput');
+            const name = input.value.trim();
+            const user = document.getElementById('userName').value.trim();
+
+            if (!name) {
+                alert('Digite um item!');
+                return;
+            }
+
+            if (!user) {
+                alert('Digite seu nome primeiro!');
+                return;
+            }
+
+            items.push({ name, user, reserved: false });
+            saveToLocalStorage();
+            renderItems();
+            input.value = '';
+            input.focus();
+            await refreshFromRepo();
+        }
+
+        async function toggleReserved(index) {
+            const user = document.getElementById('userName').value.trim();
+            if (!user) {
+                alert('Digite seu nome primeiro!');
+                return;
+            }
+
+            items[index].reserved = !items[index].reserved;
+            items[index].user = items[index].reserved ? user : '';
+            saveToLocalStorage();
+            renderItems();
+            await refreshFromRepo();
+        }
+
+        async function deleteItem(index) {
+            if (confirm('Deletar este item?')) {
+                items.splice(index, 1);
+                saveToLocalStorage();
+                renderItems();
+                await refreshFromRepo();
+            }
+        }
+
+        function renderItems() {
+            const list = document.getElementById('itemsList');
+            list.innerHTML = '';
+
+            items.forEach((item, i) => {
+                const li = document.createElement('li');
+                li.className = 'item' + (item.reserved ? ' reserved' : '');
+                li.innerHTML = `
+                    <span class="item-name">${escapeHtml(item.name)}</span>
+                    ${item.reserved ? `<span class="item-user">Por: ${escapeHtml(item.user)}</span>` : ''}
+                    <div class="item-actions">
+                        <button onclick="toggleReserved(${i})">${item.reserved ? '↩️' : '✓'}</button>
+                        <button class="danger" onclick="deleteItem(${i})">✕</button>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+
+            if (items.length === 0) {
+                list.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">Sem itens ainda. Adicione um!</li>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) items = JSON.parse(saved);
+        }
+
+        function exportToCSV() {
+            const csv = toCSV(items);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'items.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function toCSV(itemsArray) {
+            const header = 'Item,Usuario,Reservado\n';
+            const rows = itemsArray.map(item => 
+                `"${item.name}","${item.user}","${item.reserved}"`
+            ).join('\n');
+            return header + rows;
+        }
+
+        function importFromCSV() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                items = parseCSV(e.target.result);
+                saveToLocalStorage();
+                renderItems();
+                updateStatus('✅ CSV importado!', false);
+                setTimeout(() => updateStatus('', false), 3000);
+                document.getElementById('fileInput').value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function updateStatus(msg, loading) {
+            const status = document.getElementById('syncStatus');
+            status.textContent = msg;
+            status.className = 'sync-status' + (loading ? ' loading' : '');
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="pt-BR" data-simplified="true">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Presentes - Casamento</title>
     <style>
         * {
