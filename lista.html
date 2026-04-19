@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Presentes - Casamento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .item-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .item-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .delete-item-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 107, 107, 0.9);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .item-card:hover .delete-item-btn {
+            opacity: 1;
+        }
+
+        .delete-item-btn:hover {
+            background: #ff5252;
+            transform: scale(1.1);
+        }
+
+        .item-icon {
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .item-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .item-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .item-count::before {
+            content: '👥';
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        @media (min-width: 768px) {
+            .modal.active {
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .modal-content {
+                border-radius: 20px;
+                max-width: 500px;
+                width: auto;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .names-list {
+            margin-bottom: 30px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .name-tag {
+            background: #f0f0f0;
+            padding: 12px 16px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.2s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .name-tag span {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .remove-name-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-name-btn:hover {
+            background: #ff5252;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .item-card {
+                margin: 0;
+            }
+        }
+
+        .add-item-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .add-item-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .add-item-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .add-item-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .add-item-form input {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .add-item-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-item-form button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: transform 0.2s;
+        }
+
+        .add-item-form button:hover {
+            transform: scale(1.05);
+        }
+
+        .password-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .password-modal-content {
+                border-radius: 20px;
+                max-width: 400px;
+                width: auto;
+            }
+        }
+
+        .password-modal-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .password-modal-header h3 {
+            color: #ff6b6b;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .password-modal-header p {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        .password-input-group {
+            margin-bottom: 20px;
+        }
+
+        .password-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .password-input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .password-input-group input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        .password-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            padding: 12px;
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-delete {
+            padding: 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💍 Lista de Presentes</h1>
+            <p>Casamento - Marque seu presente!</p>
+        </header>
+
+        <div class="add-item-section">
+            <h3>➕ Adicionar novo item</h3>
+            <form class="add-item-form" id="addItemForm">
+                <input type="text" id="newItemName" placeholder="Nome do item..." required>
+                <button type="submit">Adicionar</button>
+            </form>
+        </div>
+
+        <div class="items-grid" id="itemsGrid"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Item</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div id="messageContainer"></div>
+
+            <div class="names-list" id="namesList">
+                <div class="empty-message">Nenhuma pessoa adicionada ainda</div>
+            </div>
+
+            <div class="form-group">
+                <label for="personName">Seu nome:</label>
+                <input type="text" id="personName" placeholder="Digite seu nome...">
+            </div>
+
+            <button class="btn-submit" onclick="addPerson()">Adicionar meu nome</button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Senha -->
+    <div class="modal" id="passwordModal">
+        <div class="password-modal-content">
+            <div class="password-modal-header">
+                <h3>🔐 Deletar Item</h3>
+                <p id="deleteItemName">tem certeza que quer deletar esse item?</p>
+            </div>
+
+            <div id="passwordMessageContainer"></div>
+
+            <div class="password-input-group">
+                <label for="passwordInput">Digite a senha:</label>
+                <input type="password" id="passwordInput" placeholder="Senha de confirmação...">
+            </div>
+
+            <div class="password-buttons">
+                <button class="btn-cancel" onclick="closePasswordModal()">Cancelar</button>
+                <button class="btn-delete" onclick="confirmDelete()">Deletar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lista de itens padrão
+        const defaultItems = [
+            { name: 'Mixer', emoji: '🥄' },
+            { name: 'TV', emoji: '📺' },
+            { name: 'Forno elétrico', emoji: '🔥' },
+            { name: 'Sofá', emoji: '🛋️' },
+            { name: 'Guarda roupa', emoji: '🚪' },
+            { name: 'Airfrier', emoji: '🍟' },
+            { name: 'Toalha de rosto', emoji: '🧴' }
+        ];
+
+        let items = [];
+        let currentItemIndex = -1;
+        let itemToDeleteIndex = -1;
+        const DELETE_PASSWORD = '1997';
+
+        // Inicializar aplicação
+        function init() {
+            loadItems();
+            renderItems();
+            setupEventListeners();
+        }
+
+        // Carregar itens do localStorage
+        function loadItems() {
+            const saved = localStorage.getItem('weddingItems');
+            items = saved ? JSON.parse(saved) : defaultItems.map(item => ({
+                name: item.name,
+                emoji: item.emoji,
+                people: []
+            }));
+            saveItems();
+        }
+
+        // Salvar itens no localStorage
+        function saveItems() {
+            localStorage.setItem('weddingItems', JSON.stringify(items));
+        }
+
+        // Renderizar grid de itens
+        function renderItems() {
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = items.map((item, index) => `
+                <div class="item-card" onclick="openModal(${index})">
+                    <button class="delete-item-btn" onclick="event.stopPropagation(); openPasswordModal(${index})" title="Deletar item">🗑️</button>
+                    <div class="item-icon">${item.emoji}</div>
+                    <div class="item-info">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-count">${item.people.length}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Abrir modal
+        function openModal(index) {
+            currentItemIndex = index;
+            const item = items[index];
+            const modal = document.getElementById('modal');
+
+            document.getElementById('modalTitle').textContent = `${item.emoji} ${item.name}`;
+            document.getElementById('personName').value = '';
+            document.getElementById('messageContainer').innerHTML = '';
+
+            renderNamesList();
+            modal.classList.add('active');
+        }
+
+        // Fechar modal
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            currentItemIndex = -1;
+        }
+
+        // Renderizar lista de nomes
+        function renderNamesList() {
+            const item = items[currentItemIndex];
+            const namesList = document.getElementById('namesList');
+
+            if (item.people.length === 0) {
+                namesList.innerHTML = '<div class="empty-message">Nenhuma pessoa adicionada ainda</div>';
+                return;
+            }
+
+            namesList.innerHTML = item.people.map((person, idx) => `
+                <div class="name-tag">
+                    <span>${person}</span>
+                    <button class="remove-name-btn" onclick="removePerson(${idx})" title="Remover">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // Adicionar pessoa
+        function addPerson() {
+            const input = document.getElementById('personName');
+            const name = input.value.trim();
+            const messageContainer = document.getElementById('messageContainer');
+
+            if (!name) {
+                messageContainer.innerHTML = '<div class="error-message">Por favor, digite um nome!</div>';
+                return;
+            }
+
+            const item = items[currentItemIndex];
+            
+            if (item.people.includes(name)) {
+                messageContainer.innerHTML = '<div class="error-message">Esse nome já foi adicionado neste item!</div>';
+                return;
+            }
+
+            item.people.push(name);
+            saveItems();
+            input.value = '';
+            messageContainer.innerHTML = '<div class="success-message">✓ Seu nome foi adicionado com sucesso!</div>';
+
+            setTimeout(() => {
+                messageContainer.innerHTML = '';
+            }, 3000);
+
+            renderNamesList();
+        }
+
+        // Remover pessoa
+        function removePerson(index) {
+            const item = items[currentItemIndex];
+            item.people.splice(index, 1);
+            saveItems();
+            renderNamesList();
+            renderItems();
+        }
+
+        // Abrir modal de confirmação de senha
+        function openPasswordModal(index) {
+            itemToDeleteIndex = index;
+            const item = items[index];
+            document.getElementById('deleteItemName').textContent = `Tem certeza que quer deletar "${item.name}"?`;
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordMessageContainer').innerHTML = '';
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        // Fechar modal de senha
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            itemToDeleteIndex = -1;
+        }
+
+        // Confirmar exclusão com senha
+        function confirmDelete() {
+            const password = document.getElementById('passwordInput').value;
+            const messageContainer = document.getElementById('passwordMessageContainer');
+
+            if (!password) {
+                messageContainer.innerHTML = '<div class="error-message">Digite a senha para confirmar!</div>';
+                return;
+            }
+
+            if (password !== DELETE_PASSWORD) {
+                messageContainer.innerHTML = '<div class="error-message">❌ Senha incorreta!</div>';
+                document.getElementById('passwordInput').value = '';
+                return;
+            }
+
+            // Senha correta - deletar item
+            items.splice(itemToDeleteIndex, 1);
+            saveItems();
+            renderItems();
+            closePasswordModal();
+            closeModal();
+        }
+
+        // Adicionar novo item
+        function setupEventListeners() {
+            document.getElementById('addItemForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('newItemName');
+                const name = input.value.trim();
+
+                if (!name) return;
+
+                // Sugerir emoji baseado em palavras-chave
+                let emoji = '🎁';
+                const lowerName = name.toLowerCase();
+                const emojiMap = {
+                    'panela': '🍳', 'prato': '🍽️', 'copo': '🥤', 'cama': '🛏️',
+                    'cortina': '🪟', 'luminaria': '💡', 'tapete': '📍', 'almofada': '🟦',
+                    'toalha': '🧴', 'cortador': '🔪', 'ralador': '🔪', 'amassador': '🥄',
+                    'peneira': '🥄', 'escorredor': '💧', 'travessa': '🍽️', 'frigideira': '🍳',
+                    'chaleira': '☕', 'bule': '🫖', 'manteigueira': '🧈', 'açucareiro': '🍯'
+                };
+
+                for (const [key, value] of Object.entries(emojiMap)) {
+                    if (lowerName.includes(key)) {
+                        emoji = value;
+                        break;
+                    }
+                }
+
+                items.push({
+                    name: name,
+                    emoji: emoji,
+                    people: []
+                });
+
+                saveItems();
+                renderItems();
+                input.value = '';
+            });
+
+            // Fechar modal ao clicar fora
+            document.getElementById('modal').addEventListener('click', (e) => {
+                if (e.target.id === 'modal') {
+                    closeModal();
+                }
+            });
+
+            // Fechar modal de senha ao clicar fora
+            document.getElementById('passwordModal').addEventListener('click', (e) => {
+                if (e.target.id === 'passwordModal') {
+                    closePasswordModal();
+                }
+            });
+
+            // Enter para confirmar deletar
+            document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    confirmDelete();
+                }
+            });
+        }
+
+        // Iniciar app
+        init();
+    </script>
+</body>
+</html>
