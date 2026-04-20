@@ -1,6 +1,18 @@
-Item,Usuario,Reservado
-Copos de vidro,"João",true
-Toalhas de banho,"Maria",true
-Jogo de cama,"",false
-Panela grande,"",false
-Xícaras de café,"",false
+Item,Emoji,Usuarios,Reservado
+Mixer,"🍹","",false
+TV,"📺","",false
+Forno elétrico,"🔥","",false
+Sofá,"🛋️","",false
+Guarda roupa,"🗄️","",false
+Airfryer,"🍟","",false
+Toalha de rosto,"🧴","",false
+Toalha banho,"🛁","",false
+Mesa cantinho do café,"☕","",false
+Varal,"👕","",false
+Fronhas travesseiro,"🛏️","",false
+Fronha de cama queen,"🛏️","",false
+Travesseiro,"😴","",false
+Cama solteiro,"🛌","",false
+Porta talheres,"🍴","",false
+Porta facas,"🔪","",false
+Jarra,"🫗","",false

@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -104,47 +104,115 @@
             background: #c0392b;
         }
 
-        .items-list {
-            list-style: none;
-            border-top: 1px solid #eee;
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 15px 0;
         }
 
-        .item {
+        .card {
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            padding: 14px 12px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fff;
+        }
+
+        .card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        }
+
+        .card.has-users {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .card-icon img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .card-edit-img {
+            display: none;
+            background: #f0f0f0;
+            border: 1px dashed #aaa;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 0.7rem;
+            color: #666;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .card-edit-img:hover {
+            background: #e0e0ff;
+            border-color: #667eea;
+            color: #333;
+        }
+
+        body.admin-mode .card-edit-img {
+            display: block;
+        }
+
+        .card-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #333;
+            text-align: center;
+            min-height: 2.4em;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            transition: background 0.2s;
+            justify-content: center;
         }
 
-        .item:hover {
-            background: #f8f9fa;
-        }
-
-        .item.reserved {
-            opacity: 0.6;
-            background: #f0f0f0;
-        }
-
-        .item-name {
-            flex: 1;
-            font-weight: 500;
-        }
-
-        .item.reserved .item-name {
-            text-decoration: line-through;
-        }
-
-        .item-user {
-            font-size: 0.85rem;
-            color: #666;
-            margin-right: 15px;
-        }
-
-        .item-actions {
+        .card-users {
             display: flex;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-height: 22px;
+        }
+
+        .user-tag {
+            background: #667eea;
+            color: white;
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: auto;
+        }
+
+        .card-actions button {
+            flex: 1;
+            padding: 7px 6px;
+            font-size: 0.82rem;
+        }
+
+        button.btn-toggle.active {
+            background: #27ae60;
+        }
+
+        button.btn-toggle.active:hover {
+            background: #1e8449;
         }
 
         .controls {
@@ -186,37 +254,37 @@
 
         .admin-container {
             background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 12px;
             margin-bottom: 0;
         }
 
         .admin-container h3 {
             color: #856404;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .admin-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .admin-controls button {
             flex: 1;
-            min-width: 140px;
+            min-width: 100px;
             background: #ffc107;
             color: #333;
             border: none;
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 0.9rem;
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 0.78rem;
             cursor: pointer;
             font-weight: 500;
             transition: all 0.3s;
@@ -224,13 +292,11 @@
 
         .admin-controls button:hover {
             background: #e0a800;
-            transform: translateY(-2px);
         }
 
         .admin-controls button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
         .admin-locked {
@@ -339,6 +405,46 @@
             background: #ccc;
         }
 
+        .emoji-picker-btn {
+            font-size: 1.4rem;
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            line-height: 1;
+        }
+
+        .emoji-picker-btn:hover {
+            border-color: #667eea;
+            background: #e8e8e8;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .emoji-option {
+            font-size: 1.5rem;
+            padding: 6px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .emoji-option:hover {
+            background: #e8e8ff;
+        }
+
         .error-message {
             color: #e74c3c;
             font-size: 0.9rem;
@@ -359,13 +465,8 @@
                 font-size: 1.4rem;
             }
 
-            .item {
-                flex-wrap: wrap;
-            }
-
-            .item-user {
-                width: 100%;
-                margin: 8px 0;
+            .items-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             }
         }
     </style>
@@ -381,7 +482,7 @@
             <div class="sync-status" id="syncStatus">Carregando...</div>
 
             <div class="info-box">
-                <strong>Como funciona:</strong> Digite seu nome, adicione itens e reserve os que quer. Clique em "Atualizar do RepositÃ³rio" para sincronizar com outras pessoas.
+                <strong>Como funciona:</strong> Digite seu nome, adicione itens e reserve os que quer. Clique em "Atualização da página" para sincronizar com outras pessoas.
             </div>
 
             <div class="input-group">
@@ -389,14 +490,15 @@
             </div>
 
             <div class="input-group">
+                <button class="emoji-picker-btn" id="emojiBtn" onclick="openEmojiPicker()" title="Escolher emoji">📦</button>
                 <input type="text" id="itemInput" placeholder="Digite um item...">
                 <button onclick="addItem()">Adicionar</button>
             </div>
 
-            <ul class="items-list" id="itemsList"></ul>
+            <div class="items-grid" id="itemsList"></div>
 
             <div class="controls">
-                <button class="secondary" onclick="refreshFromRepo()">🔄 Atualizar do Repositório</button>
+                <button class="secondary" onclick="refreshFromRepo()">🔄 Atualização da página</button>
             </div>
 
             <div class="admin-container">
@@ -409,6 +511,7 @@
                     <button onclick="document.getElementById('fileInput').click()" id="importBtn">📤 Enviar CSV</button>
                 </div>
                 <input type="file" id="fileInput" accept=".csv" style="display: none;" onchange="importFromCSV()">
+                <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
             </div>
         </div>
     </div>
@@ -432,11 +535,34 @@
         </div>
     </div>
 
+    <!-- Modal Emoji Picker -->
+    <div class="modal" id="emojiModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Escolha um emoji</h2>
+                <p>Será o ícone do item</p>
+            </div>
+            <div class="emoji-grid" id="emojiGrid"></div>
+            <div class="modal-buttons" style="margin-top:10px;">
+                <button class="btn-cancel" onclick="closeEmojiPicker()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const STORAGE_KEY = 'lista-items';
         const USER_STORAGE_KEY = 'lista-user';
         const CSV_URL = 'items.csv';
+        const SAVE_URL = 'save.php';
         let items = [];
+        let selectedEmoji = '📦';
+
+        const EMOJI_LIST = [
+            '📦','📺','🍹','🔥','🛋️','🗄️','🍟','🧴','🛁','☕',
+            '👕','🛏️','😴','🛌','🍴','🔪','🫗','🏠','🧹','🪣',
+            '🧺','🪴','💡','🔌','🪑','🛒','🎁','🍳','🥘','🫕',
+            '🥄','🍽️','🧊','🧃','🪥','🧻','🪞','🧲','🔧','🧰',
+            '🖼️','📚','💻','🎮','🔑','🧸','🕯️','🫧','🧤','👟'
+        ];
 
         // Inicialização
         window.addEventListener('DOMContentLoaded', () => {
@@ -448,22 +574,21 @@
                 if (e.key === 'Enter') addItem();
             });
 
-            // Admin modal - fechar ao clicar fora
             const modal = document.getElementById('adminModal');
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeAdminModal();
-                }
+                if (e.target === modal) closeAdminModal();
             });
 
-            // Admin modal - Enter para confirmar
             document.getElementById('adminPassword').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    verifyAdminPassword();
-                }
+                if (e.key === 'Enter') verifyAdminPassword();
             });
 
-            loadFromLocalStorage();
+            const emojiModal = document.getElementById('emojiModal');
+            emojiModal.addEventListener('click', (e) => {
+                if (e.target === emojiModal) closeEmojiPicker();
+            });
+
+            buildEmojiGrid();
             refreshFromRepo();
         });
 
@@ -471,19 +596,59 @@
             localStorage.setItem(USER_STORAGE_KEY, document.getElementById('userName').value);
         }
 
+        // ==========================================
+        // Emoji Picker
+        // ==========================================
+        function buildEmojiGrid() {
+            const grid = document.getElementById('emojiGrid');
+            EMOJI_LIST.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.className = 'emoji-option';
+                btn.textContent = emoji;
+                btn.onclick = () => selectEmoji(emoji);
+                grid.appendChild(btn);
+            });
+        }
+
+        function openEmojiPicker() {
+            document.getElementById('emojiModal').classList.add('active');
+        }
+
+        function closeEmojiPicker() {
+            document.getElementById('emojiModal').classList.remove('active');
+        }
+
+        function selectEmoji(emoji) {
+            selectedEmoji = emoji;
+            document.getElementById('emojiBtn').textContent = emoji;
+            closeEmojiPicker();
+        }
+
+        // ==========================================
+        // CSV Read / Write
+        // ==========================================
         async function refreshFromRepo() {
-            updateStatus('Carregando do repositório...', true);
+            updateStatus('Carregando...', true);
             try {
-                const response = await fetch(CSV_URL + '?t=' + Date.now());
-                const csv = await response.text();
-                items = parseCSV(csv);
-                saveToLocalStorage();
+                const response = await fetch(SAVE_URL + '?t=' + Date.now());
+                const contentType = response.headers.get('Content-Type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await response.json();
+                    items = data.map(item => ({
+                        name: item.name || '',
+                        emoji: item.emoji || '📦',
+                        users: item.users || [],
+                        image: item.image || ''
+                    }));
+                } else {
+                    const csv = await response.text();
+                    items = parseCSV(csv);
+                }
                 renderItems();
                 updateStatus('✅ Sincronizado!', false);
                 setTimeout(() => updateStatus('', false), 3000);
             } catch (error) {
-                updateStatus('⚠️ Erro ao carregar. Usando dados locais.', false);
-                loadFromLocalStorage();
+                updateStatus('⚠️ Erro ao carregar.', false);
                 renderItems();
             }
         }
@@ -491,78 +656,114 @@
         function parseCSV(csv) {
             const lines = csv.trim().split('\n').filter(l => l.trim());
             return lines.slice(1).map(line => {
-                const [name, user, reserved] = line.split(',').map(s => s.trim().replace(/^"(.*)"$/, '$1'));
-                return { name, user: user || '', reserved: reserved === 'true' };
+                const parts = line.split(',').map(s => s.trim().replace(/^"(.*)"$/, '$1'));
+                const name = parts[0] || '';
+                const emoji = parts[1] || '📦';
+                const usersStr = parts[2] || '';
+                const users = usersStr.split(';').map(s => s.trim()).filter(s => s);
+                return { name, emoji, users };
             });
         }
 
+        function toCSV(itemsArray) {
+            const header = 'Item,Emoji,Usuarios,Reservado\n';
+            const rows = itemsArray.map(item =>
+                `"${item.name}","${item.emoji}","${item.users.join(';')}","${item.users.length > 0}"`
+            ).join('\n');
+            return header + rows;
+        }
+
+        async function saveToServer() {
+            try {
+                const response = await fetch(SAVE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items })
+                });
+                if (!response.ok) throw new Error('Erro ao salvar');
+                updateStatus('✅ Salvo!', false);
+                setTimeout(() => updateStatus('', false), 2000);
+            } catch (err) {
+                updateStatus('⚠️ Erro ao salvar no servidor.', false);
+            }
+        }
+
+        // ==========================================
+        // Item Operations
+        // ==========================================
         async function addItem() {
             const input = document.getElementById('itemInput');
             const name = input.value.trim();
             const user = document.getElementById('userName').value.trim();
 
-            if (!name) {
-                alert('Digite um item!');
-                return;
-            }
+            if (!name) { alert('Digite um item!'); return; }
+            if (!user) { alert('Digite seu nome primeiro!'); return; }
 
-            if (!user) {
-                alert('Digite seu nome primeiro!');
-                return;
-            }
-
-            items.push({ name, user, reserved: false });
-            saveToLocalStorage();
+            items.push({ name, emoji: selectedEmoji, users: [] });
             renderItems();
             input.value = '';
             input.focus();
-            await refreshFromRepo();
+            selectedEmoji = '📦';
+            document.getElementById('emojiBtn').textContent = '📦';
+            await saveToServer();
         }
 
-        async function toggleReserved(index) {
+        async function toggleUser(index) {
             const user = document.getElementById('userName').value.trim();
-            if (!user) {
-                alert('Digite seu nome primeiro!');
-                return;
-            }
+            if (!user) { alert('Digite seu nome primeiro!'); return; }
 
-            items[index].reserved = !items[index].reserved;
-            items[index].user = items[index].reserved ? user : '';
-            saveToLocalStorage();
+            const item = items[index];
+            const idx = item.users.indexOf(user);
+            if (idx === -1) {
+                item.users.push(user);
+            } else {
+                item.users.splice(idx, 1);
+            }
             renderItems();
-            await refreshFromRepo();
+            await saveToServer();
         }
 
         async function deleteItem(index) {
             if (confirm('Deletar este item?')) {
                 items.splice(index, 1);
-                saveToLocalStorage();
                 renderItems();
-                await refreshFromRepo();
+                await saveToServer();
             }
         }
 
+        // ==========================================
+        // Render
+        // ==========================================
         function renderItems() {
             const list = document.getElementById('itemsList');
+            const currentUser = document.getElementById('userName').value.trim();
             list.innerHTML = '';
 
+            if (items.length === 0) {
+                list.innerHTML = '<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #999;">Sem itens ainda. Adicione um!</div>';
+                return;
+            }
+
             items.forEach((item, i) => {
-                const li = document.createElement('li');
-                li.className = 'item' + (item.reserved ? ' reserved' : '');
-                li.innerHTML = `
-                    <span class="item-name">${escapeHtml(item.name)}</span>
-                    ${item.reserved ? `<span class="item-user">Por: ${escapeHtml(item.user)}</span>` : ''}
-                    <div class="item-actions">
-                        <button onclick="toggleReserved(${i})">${item.reserved ? '↩️' : '✓'}</button>
+                const isMine = currentUser && item.users.includes(currentUser);
+                const card = document.createElement('div');
+                card.className = 'card' + (item.users.length > 0 ? ' has-users' : '');
+                const userTags = item.users.map(u => `<span class="user-tag">${escapeHtml(u)}</span>`).join('');
+                const iconHtml = item.image
+                    ? `<img src="${item.image}" alt="${escapeHtml(item.name)}">`
+                    : (item.emoji || '📦');
+                card.innerHTML = `
+                    <div class="card-icon">${iconHtml}</div>
+                    <div class="card-edit-img" onclick="openImagePicker(${i})">📷 Trocar imagem</div>
+                    <div class="card-name">${escapeHtml(item.name)}</div>
+                    <div class="card-users">${userTags}</div>
+                    <div class="card-actions">
+                        <button class="btn-toggle${isMine ? ' active' : ''}" onclick="toggleUser(${i})">${isMine ? '✓ Sair' : 'Quero!'}</button>
                         <button class="danger" onclick="deleteItem(${i})">✕</button>
                     </div>
                 `;
-                list.appendChild(li);
+                list.appendChild(card);
             });
-
-            if (items.length === 0) {
-                list.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">Sem itens ainda. Adicione um!</li>';
-            }
         }
 
         function escapeHtml(text) {
@@ -571,15 +772,51 @@
             return div.innerHTML;
         }
 
-        function saveToLocalStorage() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        // ==========================================
+        // Admin Image Upload
+        // ==========================================
+        let editingImageIndex = -1;
+
+        function openImagePicker(index) {
+            editingImageIndex = index;
+            document.getElementById('imageInput').click();
         }
 
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) items = JSON.parse(saved);
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file || editingImageIndex < 0) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = async () => {
+                    const canvas = document.createElement('canvas');
+                    const size = 80;
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+
+                    // Crop to square center
+                    const min = Math.min(img.width, img.height);
+                    const sx = (img.width - min) / 2;
+                    const sy = (img.height - min) / 2;
+                    ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+
+                    const base64 = canvas.toDataURL('image/webp', 0.7);
+                    items[editingImageIndex].image = base64;
+                    renderItems();
+                    await saveToServer();
+                    editingImageIndex = -1;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
         }
 
+        // ==========================================
+        // Export / Import
+        // ==========================================
         function exportToCSV() {
             const csv = toCSV(items);
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -591,23 +828,15 @@
             URL.revokeObjectURL(url);
         }
 
-        function toCSV(itemsArray) {
-            const header = 'Item,Usuario,Reservado\n';
-            const rows = itemsArray.map(item => 
-                `"${item.name}","${item.user}","${item.reserved}"`
-            ).join('\n');
-            return header + rows;
-        }
-
         function importFromCSV() {
             const file = document.getElementById('fileInput').files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 items = parseCSV(e.target.result);
-                saveToLocalStorage();
                 renderItems();
+                await saveToServer();
                 updateStatus('✅ CSV importado!', false);
                 setTimeout(() => updateStatus('', false), 3000);
                 document.getElementById('fileInput').value = '';
@@ -652,6 +881,7 @@
                 document.getElementById('unlockBtn').style.display = 'none';
                 document.getElementById('adminButtonsContainer').style.display = 'flex';
                 document.getElementById('adminButtonsContainer').classList.remove('admin-locked');
+                document.body.classList.add('admin-mode');
                 closeAdminModal();
                 updateStatus('✅ Acesso administrativo desbloqueado!', false);
             } else {
